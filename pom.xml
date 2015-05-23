@@ -8,7 +8,7 @@
 
 	<groupId>com.voodoodyne.rollbar</groupId>
 	<artifactId>rollbar-appengine</artifactId>
-	<version>1.0</version>
+	<version>1.1-SNAPSHOT</version>
 
 	<name>Rollbar-Appengine</name>
 	<description>Use Rollbar from Google App Engine</description>
@@ -17,7 +17,7 @@
 	<scm>
 		<url>scm:git:git@github.com:stickfigure/rollbar-appengine.git</url>
 		<developerConnection>scm:git:https://github.com/stickfigure/rollbar-appengine.git</developerConnection>
-		<tag>rollbar-appengine-1.0</tag>
+		<tag>HEAD</tag>
 	</scm>
 	<licenses>
 		<license>

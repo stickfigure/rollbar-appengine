@@ -12,6 +12,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Modifies behavior of RollbarFilter to send all exceptions that bubble through this filter off to Rollbar.
@@ -19,6 +21,8 @@ import java.io.IOException;
  */
 @Singleton
 public class AppengineRollbarFilter extends RollbarFilter {
+	private static final Logger log = Logger.getLogger(AppengineRollbarFilter.class.getName());
+
 	private final MessageBuilder messageBuilder;
 
 	@Inject
@@ -38,7 +42,12 @@ public class AppengineRollbarFilter extends RollbarFilter {
 			try {
 				base.doFilter(request, response);
 			} catch (IOException | ServletException | RuntimeException e) {
-				QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withPayload(new RollbarTask(messageBuilder.buildJson("ERROR", e.toString(), e, MDC.getCopyOfContextMap()))));
+				try {
+					QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withPayload(new RollbarTask(messageBuilder.buildJson("ERROR", e.toString(), e, MDC.getCopyOfContextMap()))));
+				} catch (Exception e2) {
+					log.log(Level.SEVERE, "Error trying to enqueue rollbar shipping task", e2);
+				}
+
 				throw e;
 			}
 		}

@@ -5,11 +5,11 @@ import com.tapstream.rollbar.HttpRequest;
 import com.tapstream.rollbar.HttpRequester;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.io.IOException;
 import java.net.URL;
 
 /**
- * Send the report off to rollbar
+ * Send the report off to rollbar. Any errors are sent upstream as RollbarException; otherwise we might
+ * trigger a cascading avalanche of new errors...
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -30,10 +30,12 @@ public class RollbarTask implements DeferredTask {
 			request.setBody(json);
 
 			final int status = new HttpRequester().send(request);
-			if (status < 200 || status >=300)
-				throw new RuntimeException("Http request produced bad status code " + status);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+			if (status < 200 || status >= 300)
+				throw new RollbarException("Http request produced bad status code " + status);
+		} catch (RollbarException e) {
+			throw e;
+		} catch (Throwable e) {
+			throw new RollbarException(e);
 		}
 	}
 }

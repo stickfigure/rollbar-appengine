@@ -41,6 +41,8 @@ public class AppengineRollbarFilter extends RollbarFilter {
 		public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException {
 			try {
 				base.doFilter(request, response);
+			} catch (RollbarException e) {
+				throw e;	// Let this bubble up; we don't want a loop that creates more tasks...
 			} catch (IOException | ServletException | RuntimeException e) {
 				try {
 					QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withPayload(new RollbarTask(messageBuilder.buildJson("ERROR", e.toString(), e, MDC.getCopyOfContextMap()))));

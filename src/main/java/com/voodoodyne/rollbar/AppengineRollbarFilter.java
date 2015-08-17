@@ -1,6 +1,6 @@
 package com.voodoodyne.rollbar;
 
-import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.tapstream.rollbar.RollbarFilter;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +24,12 @@ public class AppengineRollbarFilter extends RollbarFilter {
 	private static final Logger log = Logger.getLogger(AppengineRollbarFilter.class.getName());
 
 	private final MessageBuilder messageBuilder;
+	private final Queue queue;
 
 	@Inject
-	public AppengineRollbarFilter(MessageBuilder messageBuilder) {
+	public AppengineRollbarFilter(MessageBuilder messageBuilder, @Rollbar Queue queue) {
 		this.messageBuilder = messageBuilder;
+		this.queue = queue;
 	}
 
 	/**
@@ -45,7 +47,7 @@ public class AppengineRollbarFilter extends RollbarFilter {
 				throw e;	// Let this bubble up; we don't want a loop that creates more tasks...
 			} catch (IOException | ServletException | RuntimeException e) {
 				try {
-					QueueFactory.getDefaultQueue().add(TaskOptions.Builder.withPayload(new RollbarTask(messageBuilder.buildJson("ERROR", e.toString(), e, MDC.getCopyOfContextMap()))));
+					queue.add(TaskOptions.Builder.withPayload(new RollbarTask(messageBuilder.buildJson("ERROR", e.toString(), e, MDC.getCopyOfContextMap()))));
 				} catch (Exception e2) {
 					log.log(Level.SEVERE, "Error trying to enqueue rollbar shipping task", e2);
 				}
@@ -59,4 +61,5 @@ public class AppengineRollbarFilter extends RollbarFilter {
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 		super.doFilter(servletRequest, servletResponse, new TrappingFilterChain(filterChain));
 	}
+
 }

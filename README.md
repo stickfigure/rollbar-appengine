@@ -26,18 +26,27 @@ It can be downloaded directly from [http://search.maven.org/]
 
 ## Usage
 
-If you're using Guice, bind a `NotifyBuilder`:
+If you're using Guice, bind a `NotifyBuilder` and a `Queue`:
 
 	@Provides
 	public NotifyBuilder notifyBuilder() throws UnknownHostException {
 		return new NotifyBuilder("your server access token", "production", null);
 	}
 	
+	@Provides @Rollbar	// note the qualifier
+	public Queue queue() {
+		return QueueFactory.getQueue("rollbar");
+	}
+	
+	
 If you are not using Guice, subclass `AppengineRollbarFilter` and give it a default constructor:
 
 	public class MyRollbarFilter extends AppengineRollebarFilter {
 		public MyRollbarFilter() {
-			super(new MessageBuilder(new NotifyBuilder("your server access token", "production", null));
+			super(
+				new MessageBuilder(new NotifyBuilder("your server access token", "production", null)),
+				QueueFactory.getDefaultQueue()
+			);
 		}
 	}
 	

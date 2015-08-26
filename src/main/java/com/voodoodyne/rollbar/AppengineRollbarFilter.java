@@ -12,6 +12,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,7 +49,9 @@ public class AppengineRollbarFilter extends RollbarFilter {
 				throw e;	// Let this bubble up; we don't want a loop that creates more tasks...
 			} catch (IOException | ServletException | RuntimeException e) {
 				try {
-					queue.add(TaskOptions.Builder.withPayload(new RollbarTask(messageBuilder.buildJson("ERROR", e.toString(), e, MDC.getCopyOfContextMap()))));
+					final Map<String, String> mdcContext = MDC.getCopyOfContextMap();
+					final Map<String, String> context = mdcContext != null ? mdcContext : Collections.<String, String>emptyMap();
+					queue.add(TaskOptions.Builder.withPayload(new RollbarTask(messageBuilder.buildJson("ERROR", e.toString(), e, context))));
 				} catch (Exception e2) {
 					log.log(Level.SEVERE, "Error trying to enqueue rollbar shipping task", e2);
 				}
